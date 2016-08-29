@@ -12,7 +12,7 @@ import threading
 import cookielib
 
 all_websites=[]
-
+no_of_threads=100
 
 def user_agent_handler(proxy_url):
 	cj = cookielib.FileCookieJar("cookies")
@@ -30,7 +30,7 @@ def read_website_urls(file):
 	for line in contents:
 		line_split=line.split("	")
 		try:
-			all_websites.append(line_split[2])
+			all_websites.append("https://"+line_split[2]+"/robots.txt")
 		except:
 			pass
 	
@@ -38,20 +38,25 @@ def read_website_urls(file):
 	#print all_websites	
 
 
-def crawl_website(site_url,user_agent):
-	try:
-		content=urllib2.urlopen(site_url).read()
-		write_file="data/"+site_url.split("/")[2]+".txt"
-		print write_file
-		print site_url
-		wfd=open(write_file,"w")
-		wfd.write(content)
-		wfd.close()
-		#print content
-	except:
-		print "-----------Site Failed-------------\n"
-		print site_url
-		print "+++++++++++End+++++++++++++++++++++\n"
+def crawl_website(site_urls,user_agent):
+	for site_url in site_urls:	
+		try:		
+			content=urllib2.urlopen(site_url).read()
+			write_file="data/"+site_url.split("/")[2]+".txt"
+			print write_file
+			print site_url
+			wfd=open(write_file,"wc")
+			wfd.write(content)
+			wfd.close()
+			#print content
+		except:                            # if https failed then try http protocol
+			print "-----------Site Failed-------------\n"
+			print site_url
+			if site_url[4]=='s':       # checking https connection or not
+				site_url="http://"+site_url.split("//")[1]
+				site_urls.append(site_url)
+			
+			print "+++++++++++End+++++++++++++++++++++\n"
 
 
 
@@ -63,9 +68,12 @@ def main():
 	read_website_urls("top_500.txt")
 	user_agent=user_agent_handler("http://172.30.0.22:3128")
 	urllib2.install_opener(user_agent)
-	for site in all_websites:
-		crawl_website("https://"+site+"/robots.txt",user_agent)
-
+	all_threads=[]
+	for no in range(0,no_of_threads):
+		t=threading.Thread(target=crawl_website,args=(all_websites[50*(no-1):no*50],user_agent,))
+		t.start()
+	for thread in all_threads:
+		thread.join()
 
 
 
