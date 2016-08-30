@@ -65,7 +65,7 @@ def crawl_website(site_urls,user_agent):
 
 def main():
 	#print "Working"
-	read_website_urls("top_500.txt")
+	read_website_urls("test.txt")
 	user_agent=user_agent_handler("http://172.30.0.22:3128")
 	urllib2.install_opener(user_agent)
 	all_threads=[]
